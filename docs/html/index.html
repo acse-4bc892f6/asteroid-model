@@ -1,0 +1,572 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Project 1: Armageddon - The hazard of small asteroids &#8212; armageddon  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="project-1-armageddon-the-hazard-of-small-asteroids">
+<h1>Project 1: Armageddon - The hazard of small asteroids<a class="headerlink" href="#project-1-armageddon-the-hazard-of-small-asteroids" title="Permalink to this headline">¶</a></h1>
+<section id="synopsis">
+<h2>Synopsis:<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p>Asteroids entering Earth’s atmosphere are subject to extreme drag forces
+that decelerate, heat and disrupt the space rocks. The fate of an
+asteroid is a complex function of its initial mass, speed, trajectory
+angle and internal strength.</p>
+<p><a class="reference external" href="https://en.wikipedia.org/wiki/Asteroid">Asteroids</a> 10-100 m in
+diameter can penetrate deep into Earth’s atmosphere and disrupt
+catastrophically, generating an atmospheric disturbance
+(<a class="reference external" href="https://en.wikipedia.org/wiki/Air_burst">airburst</a>) that can cause
+<a class="reference external" href="https://www.youtube.com/watch?v=tq02C_3FvFo">damage on the ground</a>.
+Such an event occurred over the city of
+<a class="reference external" href="https://en.wikipedia.org/wiki/Chelyabinsk_meteor">Chelyabinsk</a> in
+Russia, in 2013, releasing energy equivalent to about 520 <a class="reference external" href="https://en.wikipedia.org/wiki/TNT_equivalent">kilotons of
+TNT</a> (1 kt TNT is
+equivalent to <span class="math notranslate nohighlight">\(4.184 \times 10^{12}\)</span> J), and injuring thousands of
+people (<a class="reference external" href="http://doi.org/10.1126/science.1242642">Popova et al.,
+2013</a>; <a class="reference external" href="http://doi.org/10.1038/nature12741">Brown et al.,
+2013</a>). An even larger event
+occurred over
+<a class="reference external" href="https://en.wikipedia.org/wiki/Tunguska_event">Tunguska</a>, a
+relatively unpopulated area in Siberia, in 1908.</p>
+<p>This simulator predicts the fate of asteroids entering Earth’s atmosphere,
+and provides a hazard mapper for an impact over the UK.</p>
+</section>
+<section id="problem-definition">
+<h2>Problem definition<a class="headerlink" href="#problem-definition" title="Permalink to this headline">¶</a></h2>
+<section id="equations-of-motion-for-a-rigid-asteroid">
+<h3>Equations of motion for a rigid asteroid<a class="headerlink" href="#equations-of-motion-for-a-rigid-asteroid" title="Permalink to this headline">¶</a></h3>
+<p>The dynamics of an asteroid in Earth’s atmosphere prior to break-up is
+governed by a coupled set of ordinary differential equations:</p>
+<div class="math notranslate nohighlight">
+\begin{aligned}
+\frac{dv}{dt} &amp; = \frac{-C_D\rho_a A v^2}{2 m} + g \sin \theta \\
+\frac{dm}{dt} &amp; = \frac{-C_H\rho_a A v^3}{2 Q} \\
+\frac{d\theta}{dt} &amp; = \frac{g\cos\theta}{v} - \frac{C_L\rho_a A v}{2 m} - \frac{v\cos\theta}{R_P + z} \\
+\frac{dz}{dt} &amp; = -v\sin\theta \\
+\frac{dx}{dt} &amp; = \frac{v\cos\theta}{1 + z/R_P}
+\end{aligned}</div><p>In these equations, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(m\)</span>, and <span class="math notranslate nohighlight">\(A\)</span> are the asteroid
+speed (along trajectory), mass and cross-sectional area, respectively.
+We will assume an initially <strong>spherical asteroid</strong> to convert from
+inital radius to mass (and cross-sectional area). <span class="math notranslate nohighlight">\(\theta\)</span> is the
+meteoroid trajectory angle to the horizontal (in radians), <span class="math notranslate nohighlight">\(x\)</span> is
+the downrange distance of the meteoroid from its entry position,
+<span class="math notranslate nohighlight">\(z\)</span> is the altitude and <span class="math notranslate nohighlight">\(t\)</span> is time; <span class="math notranslate nohighlight">\(C_D\)</span> is the drag
+coefficient, <span class="math notranslate nohighlight">\(\rho_a\)</span> is the atmospheric density (a function of
+altitude ), <span class="math notranslate nohighlight">\(C_H\)</span> is an ablation efficiency coefficient, <span class="math notranslate nohighlight">\(Q\)</span>
+is the specific heat of ablation; <span class="math notranslate nohighlight">\(C_L\)</span> is a lift coefficient; and
+<span class="math notranslate nohighlight">\(R_P\)</span> is the planetary radius. All terms use MKS units.</p>
+</section>
+<section id="asteroid-break-up-and-deformation">
+<h3>Asteroid break-up and deformation<a class="headerlink" href="#asteroid-break-up-and-deformation" title="Permalink to this headline">¶</a></h3>
+<p>A commonly used criterion for the break-up of an asteroid in the
+atmosphere is when the ram pressure of the air interacting with the
+asteroid <span class="math notranslate nohighlight">\(\rho_a v^2\)</span> first exceeds the strength of the asteroid
+<span class="math notranslate nohighlight">\(Y\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\rho_a v^2 = Y\]</div>
+<p>Should break-up occur, the asteroid deforms and spreads laterally as it
+continues its passage through the atmosphere. Several models for the
+spreading rate have been proposed. In the simplest model, the fragmented
+asteroid’s spreading rate is related to its along trajectory speed
+<a class="reference external" href="http://doi.org/10.1086/116499">(Hills and Goda, 1993)</a>:</p>
+<div class="math notranslate nohighlight">
+\[\frac{dr}{dt} = \left[\frac{7}{2}\alpha\frac{\rho_a}{\rho_m}\right]^{1/2} v\]</div>
+<p>Where <span class="math notranslate nohighlight">\(r\)</span> is the asteroid radius, <span class="math notranslate nohighlight">\(\rho_m\)</span> is the asteroid
+density (assumed constant) and <span class="math notranslate nohighlight">\(\alpha\)</span> is a spreading
+coefficient, often taken to be 0.3. It is conventional to define the
+cross-sectional area of the expanding cloud of fragments as
+<span class="math notranslate nohighlight">\(A = \pi r^2\)</span> (i.e., assuming a circular cross-section), for use
+in the above equations. Fragmentation and spreading <strong>ceases</strong> when the
+ram pressure drops back below the strength of the meteoroid
+<span class="math notranslate nohighlight">\(\rho_a v^2 &lt; Y\)</span>.</p>
+</section>
+<section id="airblast-damage">
+<h3>Airblast damage<a class="headerlink" href="#airblast-damage" title="Permalink to this headline">¶</a></h3>
+<p>The rapid deposition of energy in the atmosphere is analogous to an
+explosion and so the environmental consequences of the airburst can be
+estimated using empirical data from atmospheric explosion experiments
+<a class="reference external" href="https://www.dtra.mil/Portals/61/Documents/NTPR/4-Rad_Exp_Rpts/36_The_Effects_of_Nuclear_Weapons.pdf">(Glasstone and Dolan,
+1977)</a>.</p>
+<p>The main cause of damage close to the impact site is a strong (pressure)
+blastwave in the air, known as the <strong>airblast</strong>. Empirical data suggest
+that the pressure in this wave <span class="math notranslate nohighlight">\(p\)</span> (in Pa) (above ambient, also
+known as overpressure), as a function of explosion energy <span class="math notranslate nohighlight">\(E_k\)</span>
+(in kilotons of TNT equivalent), burst altitude <span class="math notranslate nohighlight">\(z_b\)</span> (in m) and
+horizontal range <span class="math notranslate nohighlight">\(r\)</span> (in m), is given by:</p>
+<div class="math notranslate nohighlight">
+\begin{equation*}
+   p(r) = 3.14 \times 10^{11} \left(\frac{r^2 + z_b^2}{E_k^{2/3}}\right)^{-1.3} + 1.8 \times 10^{7} \left(\frac{r^2 + z_b^2}{E_k^{2/3}}\right)^{-0.565}
+\end{equation*}</div><p>For airbursts, we will take the total kinetic energy lost by the
+asteroid at the burst altitude as the burst energy <span class="math notranslate nohighlight">\(E_k\)</span>. For
+cratering events, we will define <span class="math notranslate nohighlight">\(E_k\)</span>
+as the <strong>larger</strong> of the total kinetic energy lost by the asteroid at
+the burst altitude or the residual kinetic energy of the asteroid when
+it hits the ground.</p>
+<p>The following threshold pressures can then be used to define different
+degrees of damage.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 55%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Damage Level</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Pressure (kPa)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>~10% glass windows shatter</p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>~90% glass windows shatter</p></td>
+<td><p>3.5</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>Wood frame buildings collapse</p></td>
+<td><p>27</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>Multistory brick buildings collapse</p></td>
+<td><p>43</p></td>
+</tr>
+</tbody>
+</table>
+<p>Table 1: Pressure thresholds (in kPa) for airblast damage
+Function API
+============
+AirburstSolver
+~~~~~~~~~~~~~~~~~~~</p>
+<p>See  <a class="reference internal" href="#module-armageddon.solver.Planet" title="armageddon.solver.Planet"><code class="xref py py-class docutils literal notranslate"><span class="pre">armageddon.solver.Planet</span></code></a> for more information.</p>
+<span class="target" id="module-armageddon"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-armageddon.solver.Planet"></span><p>The class called Planet is initialised with constants appropriate
+for the given target planet, including the atmospheric density profile
+and other constants</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.solver.Planet.analyse_outcome">
+<span class="sig-prename descclassname"><span class="pre">armageddon.solver.Planet.</span></span><span class="sig-name descname"><span class="pre">analyse_outcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.solver.Planet.analyse_outcome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inspect a pre-found solution to calculate the impact and airburst stats
+:param result: pandas dataframe with velocity, mass, angle, altitude, horizontal</p>
+<blockquote>
+<div><p>distance, radius and dedz as a function of time</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>outcome</strong> – dictionary with details of the impact event,
+which should contain
+the key <code class="docutils literal notranslate"><span class="pre">outcome</span></code>
+(which should contain one of the following strings:
+<code class="docutils literal notranslate"><span class="pre">Airburst</span></code> or <code class="docutils literal notranslate"><span class="pre">Cratering</span></code>)
+, as well as the following keys:
+<code class="docutils literal notranslate"><span class="pre">burst_peak_dedz</span></code>, <code class="docutils literal notranslate"><span class="pre">burst_altitude</span></code>, <code class="docutils literal notranslate"><span class="pre">burst_distance</span></code>, <code class="docutils literal notranslate"><span class="pre">burst_energy</span></code>  # noqa: E501</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.solver.Planet.calculate_energy">
+<span class="sig-prename descclassname"><span class="pre">armageddon.solver.Planet.</span></span><span class="sig-name descname"><span class="pre">calculate_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.solver.Planet.calculate_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to calculate the kinetic energy lost per unit altitude in
+kilotons TNT per km, for a given solution.
+:param result: A pandas dataframe with columns for the velocity, mass, angle,</p>
+<blockquote>
+<div><p>altitude, horizontal distance and radius as a function of time</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Returns</strong> (<em>DataFrame</em>) – Returns the dataframe with additional column <code class="docutils literal notranslate"><span class="pre">dedz</span></code> which is the
+kinetic energy lost per unit altitude</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.solver.Planet.extension2">
+<span class="sig-prename descclassname"><span class="pre">armageddon.solver.Planet.</span></span><span class="sig-name descname"><span class="pre">extension2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.solver.Planet.extension2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to find asteroid parameters from the Chelyabinsk
+meteoroid energy deposition curve</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.solver.Planet.solve_atmospheric_entry">
+<span class="sig-prename descclassname"><span class="pre">armageddon.solver.Planet.</span></span><span class="sig-name descname"><span class="pre">solve_atmospheric_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">density</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strength</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_altitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radians</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.solver.Planet.solve_atmospheric_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the system of differential equations for a given impact scenario
+:param radius: The radius of the asteroid in meters
+:type radius: float
+:param velocity: The entery speed of the asteroid in meters/second
+:type velocity: float
+:param density: The density of the asteroid in kg/m^3
+:type density: float
+:param strength: The strength of the asteroid (i.e. the maximum pressure it can</p>
+<blockquote>
+<div><p>take before fragmenting) in N/m^2</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>angle</strong> (<em>float</em>) – The initial trajectory angle of the asteroid to the horizontal
+By default, input is in degrees. If ‘radians’ is set to True, the
+input should be in radians</p></li>
+<li><p><strong>init_altitude</strong> (<em>float</em><em>, </em><em>optional</em>) – Initial altitude in m</p></li>
+<li><p><strong>dt</strong> (<em>float</em><em>, </em><em>optional</em>) – The output timestep, in s</p></li>
+<li><p><strong>radians</strong> (<em>logical</em><em>, </em><em>optional</em>) – Whether angles should be given in degrees or radians. Default=False
+Angles returned in the dataframe will have the same units as the
+input</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Result</strong> – A pandas dataframe containing the solution to the system.
+Includes the following columns:
+‘velocity’, ‘mass’, ‘angle’, ‘altitude’,
+‘distance’, ‘radius’, ‘time’</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="mappinglocator">
+<h3>Mappinglocator<a class="headerlink" href="#mappinglocator" title="Permalink to this headline">¶</a></h3>
+<p>See  <a class="reference internal" href="#module-armageddon.locator.great_circle_distance" title="armageddon.locator.great_circle_distance"><code class="xref py py-func docutils literal notranslate"><span class="pre">armageddon.locator.great_circle_distance()</span></code></a> for more information.</p>
+<span class="target" id="module-0"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-armageddon.locator"></span><p>Module dealing with postcode information.</p>
+<span class="target" id="module-armageddon.locator.great_circle_distance"></span><p>Calculate the great circle distance (in metres) between pairs of
+points specified as latitude and longitude on a spherical Earth
+(with radius 6371 km).</p>
+<dl class="field-list simple">
+<dt class="field-odd">param latlon1</dt>
+<dd class="field-odd"><p>latitudes and longitudes of first point (as [n, 2] array for n points)</p>
+</dd>
+<dt class="field-even">type latlon1</dt>
+<dd class="field-even"><p>arraylike</p>
+</dd>
+<dt class="field-odd">param latlon2</dt>
+<dd class="field-odd"><p>latitudes and longitudes of second point (as [m, 2] array for m points)</p>
+</dd>
+<dt class="field-even">type latlon2</dt>
+<dd class="field-even"><p>arraylike</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p>Distance in metres between each pair of points (as an n x m array)</p>
+</dd>
+<dt class="field-even">rtype</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fmt</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">format_float_scientific</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">numpy</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">formatter</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">fmt</span><span class="p">}):</span>
+<span class="go">    print(great_circle_distance([[54.0, 0.0], [55, 0.0]], [55, 1.0]))</span>
+<span class="go">[1.286e+05 6.378e+04]</span>
+</pre></div>
+</div>
+<p>see  <a class="reference internal" href="#module-armageddon.locator.PostcodeLocator" title="armageddon.locator.PostcodeLocator"><code class="xref py py-class docutils literal notranslate"><span class="pre">armageddon.locator.PostcodeLocator</span></code></a> for more information.</p>
+<span class="target" id="module-1"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-2"></span><p>Module dealing with postcode information.</p>
+<span class="target" id="module-armageddon.locator.PostcodeLocator"></span><p>Class to interact with a postcode database file.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.locator.PostcodeLocator.get_population_of_postcode">
+<span class="sig-prename descclassname"><span class="pre">armageddon.locator.PostcodeLocator.</span></span><span class="sig-name descname"><span class="pre">get_population_of_postcode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postcodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.locator.PostcodeLocator.get_population_of_postcode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return populations of a list of postcode units or sectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postcodes</strong> (<em>list of lists</em>) – list of postcode units or postcode sectors</p></li>
+<li><p><strong>sector</strong> (<em>bool</em><em>, </em><em>optional</em>) – if true return populations for postcode sectors, otherwise postcode
+units</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Contains the populations of input postcode units or sectors</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of lists</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span> <span class="o">=</span> <span class="n">PostcodeLocator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span><span class="o">.</span><span class="n">get_population_of_postcode</span><span class="p">([[</span><span class="s1">&#39;SW7 2AZ&#39;</span><span class="p">,</span><span class="s1">&#39;SW7 2BT&#39;</span><span class="p">,</span><span class="s1">&#39;SW7 2BU&#39;</span><span class="p">,</span><span class="s1">&#39;SW7 2DD&#39;</span><span class="p">]])</span>  <span class="c1"># noqa:E501</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span><span class="o">.</span><span class="n">get_population_of_postcode</span><span class="p">([[</span><span class="s1">&#39;SW7  2&#39;</span><span class="p">]],</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="armageddon.locator.PostcodeLocator.get_postcodes_by_radius">
+<span class="sig-prename descclassname"><span class="pre">armageddon.locator.PostcodeLocator.</span></span><span class="sig-name descname"><span class="pre">get_postcodes_by_radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radii</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#armageddon.locator.PostcodeLocator.get_postcodes_by_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return (unit or sector) postcodes within specific distances of
+input location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>arraylike</em>) – Latitude-longitude pair of centre location</p></li>
+<li><p><strong>radii</strong> (<em>arraylike</em>) – array of radial distances from X</p></li>
+<li><p><strong>sector</strong> (<em>bool</em><em>, </em><em>optional</em>) – if true return postcode sectors, otherwise postcode units</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Contains the lists of postcodes closer than the elements of
+radii to the location X.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of lists</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span> <span class="o">=</span> <span class="n">PostcodeLocator</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span><span class="o">.</span><span class="n">get_postcodes_by_radius</span><span class="p">((</span><span class="mf">51.4981</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1773</span><span class="p">),</span> <span class="p">[</span><span class="mf">0.13e3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">locator</span><span class="o">.</span><span class="n">get_postcodes_by_radius</span><span class="p">((</span><span class="mf">51.4981</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1773</span><span class="p">),</span> <span class="p">[</span><span class="mf">0.4e3</span><span class="p">,</span> <span class="mf">0.2e3</span><span class="p">],</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># noqa:E501</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>See  <a class="reference internal" href="#module-armageddon.mapping.plot_circle" title="armageddon.mapping.plot_circle"><code class="xref py py-func docutils literal notranslate"><span class="pre">armageddon.mapping.plot_circle()</span></code></a> for more information.</p>
+<span class="target" id="module-3"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-armageddon.mapping"></span><span class="target" id="module-armageddon.mapping.plot_circle"></span><p>Plot a circle on a map (creating a new folium map instance if necessary).</p>
+<dl class="field-list simple">
+<dt class="field-odd">param lat</dt>
+<dd class="field-odd"><p>latitude of circle to plot (degrees)</p>
+</dd>
+<dt class="field-even">type lat</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param lon</dt>
+<dd class="field-odd"><p>longitude of circle to plot (degrees)</p>
+</dd>
+<dt class="field-even">type lon</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param radius</dt>
+<dd class="field-odd"><p>radius of circle to plot  (m)</p>
+</dd>
+<dt class="field-even">type radius</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param map</dt>
+<dd class="field-odd"><p>existing map object</p>
+</dd>
+<dt class="field-even">type map</dt>
+<dd class="field-even"><p>folium.Map</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">rtype</dt>
+<dd class="field-even"><p>Folium map object</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">folium</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">armageddon</span><span class="o">.</span><span class="n">plot_circle</span><span class="p">(</span><span class="mf">52.79</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.95</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">,</span> <span class="nb">map</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See  <a class="reference internal" href="#module-armageddon.damage.damage_zones" title="armageddon.damage.damage_zones"><code class="xref py py-func docutils literal notranslate"><span class="pre">armageddon.damage.damage_zones()</span></code></a>  for more information.</p>
+<span class="target" id="module-4"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-armageddon.damage"></span><span class="target" id="module-armageddon.damage.damage_zones"></span><p>Calculate the latitude and longitude of the surface zero location and the
+list of airblast damage radii (m) for a given impact scenario.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param outcome</dt>
+<dd class="field-odd"><p>the outcome dictionary from an impact scenario</p>
+</dd>
+<dt class="field-even">type outcome</dt>
+<dd class="field-even"><p>Dict</p>
+</dd>
+<dt class="field-odd">param lat</dt>
+<dd class="field-odd"><p>latitude of the meteoroid entry point (degrees)</p>
+</dd>
+<dt class="field-even">type lat</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param lon</dt>
+<dd class="field-odd"><p>longitude of the meteoroid entry point (degrees)</p>
+</dd>
+<dt class="field-even">type lon</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param bearing</dt>
+<dd class="field-odd"><p>Bearing (azimuth) relative to north of meteoroid trajectory (degrees)</p>
+</dd>
+<dt class="field-even">type bearing</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param pressures</dt>
+<dd class="field-odd"><p>List of threshold pressures to define airblast damage levels</p>
+</dd>
+<dt class="field-even">type pressures</dt>
+<dd class="field-even"><p>float, arraylike</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>blat</strong> (<em>float</em>) – latitude of the surface zero point (degrees)</p></li>
+<li><p><strong>blon</strong> (<em>float</em>) – longitude of the surface zero point (degrees)</p></li>
+<li><p><strong>damrad</strong> (<em>arraylike, float</em>) – List of distances specifying the blast radii
+for the input damage levels</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p># &gt;&gt;&gt; import armageddon
+# &gt;&gt;&gt; outcome = {‘burst_altitude’: 8e3, ‘burst_energy’: 7e3,
+#                ‘burst_distance’: 90e3, ‘burst_peak_dedz’: 1e3,
+#                ‘outcome’: ‘Airburst’}
+# &gt;&gt;&gt; armageddon.damage_zones(outcome, 52.79, -2.95, 135,
+# pressures=[1e3, 3.5e3, 27e3, 43e3])</p>
+<p>See  <a class="reference internal" href="#module-armageddon.damage.impact_risk" title="armageddon.damage.impact_risk"><code class="xref py py-func docutils literal notranslate"><span class="pre">armageddon.damage.impact_risk()</span></code></a> for more information.</p>
+<span class="target" id="module-5"></span><p>Python asteroid airburst calculator</p>
+<span class="target" id="module-6"></span><span class="target" id="module-armageddon.damage.impact_risk"></span><p>Perform an uncertainty analysis to calculate the risk for each affected
+UK postcode or postcode sector</p>
+<dl class="field-list simple">
+<dt class="field-odd">param planet</dt>
+<dd class="field-odd"><p>The Planet instance from which to solve the atmospheric entry</p>
+</dd>
+<dt class="field-even">type planet</dt>
+<dd class="field-even"><p>armageddon.Planet instance</p>
+</dd>
+<dt class="field-odd">param means</dt>
+<dd class="field-odd"><p>A dictionary of mean input values for the uncertainty analysis. This
+should include values for <code class="docutils literal notranslate"><span class="pre">radius</span></code>, <code class="docutils literal notranslate"><span class="pre">angle</span></code>, <code class="docutils literal notranslate"><span class="pre">strength</span></code>,
+<code class="docutils literal notranslate"><span class="pre">density</span></code>, <code class="docutils literal notranslate"><span class="pre">velocity</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">bearing</span></code></p>
+</dd>
+<dt class="field-even">type means</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">param stdevs</dt>
+<dd class="field-odd"><p>A dictionary of standard deviations for each input value. This
+should include values for <code class="docutils literal notranslate"><span class="pre">radius</span></code>, <code class="docutils literal notranslate"><span class="pre">angle</span></code>, <code class="docutils literal notranslate"><span class="pre">strength</span></code>,
+<code class="docutils literal notranslate"><span class="pre">density</span></code>, <code class="docutils literal notranslate"><span class="pre">velocity</span></code>, <code class="docutils literal notranslate"><span class="pre">lat</span></code>, <code class="docutils literal notranslate"><span class="pre">lon</span></code> and <code class="docutils literal notranslate"><span class="pre">bearing</span></code></p>
+</dd>
+<dt class="field-even">type stdevs</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">param pressure</dt>
+<dd class="field-odd"><p>The pressure at which to calculate the damage zone for each impact</p>
+</dd>
+<dt class="field-even">type pressure</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">param nsamples</dt>
+<dd class="field-odd"><p>The number of iterations to perform in the uncertainty analysis</p>
+</dd>
+<dt class="field-even">type nsamples</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+<dt class="field-odd">param sector</dt>
+<dd class="field-odd"><p>If True (default) calculate the risk for postcode sectors, otherwise
+calculate the risk for postcodes</p>
+</dd>
+<dt class="field-even">type sector</dt>
+<dd class="field-even"><p>logical, optional</p>
+</dd>
+<dt class="field-odd">returns</dt>
+<dd class="field-odd"><p><strong>risk</strong> – A pandas DataFrame with columns for postcode (or postcode sector) and
+the associated risk. These should be called <code class="docutils literal notranslate"><span class="pre">postcode</span></code> or <code class="docutils literal notranslate"><span class="pre">sector</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">risk</span></code>.</p>
+</dd>
+<dt class="field-even">rtype</dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">armageddon</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

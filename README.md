@@ -1,5 +1,7 @@
 # ACSE-4-armageddon
 
+Link to original repository: https://github.com/ese-msc-2021/acs-armageddon-metis
+
 This is a very brief Readme to familiarise you with how to install and run the tool you will develop. You should expand and elaborate on this in your final version.
 
 ## Installation
